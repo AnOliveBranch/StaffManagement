@@ -1,0 +1,35 @@
+name: StaffManagement
+version: 1.0
+author: RoboticPlayer
+api-version: 1.15
+main: com.cubepalace.staffmanagement.StaffManagement
+
+commands:
+  authenticate:
+    description: Command used to authenticate
+  staffmanagement:
+    description: Main command for the plugin
+    
+permissions:
+  staffmanagement.*:
+    description: Access to everything
+    children:
+      staffmanagement.command: true
+      staffmanagement.auth.*: true
+      staffmanagement.reload: true
+  staffmanagement.command:
+    description: Access to /staffmanagement
+  staffmanagement.auth.*:
+    description: Access to all authentication commands
+    children:
+      staffmanagement.auth.add: true
+      staffmanagement.auth.remove: true
+      staffmanagement.auth.set: true
+  staffmanagement.auth.add:
+    description: Access to give authentication to a user
+  staffmanagement.auth.remove:
+    description: Access to revoke authentication from a user
+  staffmanagement.auth.set:
+    description: Access to set your authentication password
+  staffmanagement.reload:
+    description: Access to reload the server
