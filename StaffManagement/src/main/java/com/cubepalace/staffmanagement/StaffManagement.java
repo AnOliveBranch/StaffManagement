@@ -1,7 +1,5 @@
 package com.cubepalace.staffmanagement;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -24,18 +22,21 @@ import com.cubepalace.staffmanagement.util.AuthenticationFile;
 
 public class StaffManagement extends JavaPlugin {
 
-	private Map<UUID, List<String>> authMap;
-	private AuthenticationFile authFile;
+	private Map<UUID, String> hashMap;
+	private Map<UUID, String> saltMap;
+	private AuthenticationFile hashesFile;
+	private AuthenticationFile saltsFile;
 	private AuthenticationHandler authHandler;
 	private MessageHandler msgHandler;
 	private PlayerDataHandler dataHandler;
+	private PlayerJoinListener joinListener;
 	
 	@Override
 	public void onEnable() {
 		getLogger().info("StaffManagement has been enabled");
+		setup();
 		registerListeners();
 		registerCommands();
-		setup();
 	}
 	
 	@Override
@@ -44,7 +45,8 @@ public class StaffManagement extends JavaPlugin {
 	}
 	
 	private void registerListeners() {
-		getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
+		joinListener = new PlayerJoinListener(this, saltMap, hashMap);
+		getServer().getPluginManager().registerEvents(joinListener, this);
 		getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this);
 		getServer().getPluginManager().registerEvents(new PlayerMoveListener(this), this);
 		getServer().getPluginManager().registerEvents(new PlayerPreProcessListener(this), this);
@@ -62,32 +64,39 @@ public class StaffManagement extends JavaPlugin {
 	private void setup() {
 		if (!getDataFolder().exists())
 			getDataFolder().mkdirs();
-		authFile = new AuthenticationFile(this, "authentication.yml");
-		authMap = authFile.loadTokens();
+		hashesFile = new AuthenticationFile(this, "hashes.yml");
+		hashMap = hashesFile.loadTokens();
+		hashesFile.saveTokens(hashMap);
+		saltsFile = new AuthenticationFile(this, "salts.yml");
+		saltMap = saltsFile.loadTokens();
+		saltsFile.saveTokens(saltMap);
 		authHandler = new AuthenticationHandler(this);
 		msgHandler = new MessageHandler(this);
 		dataHandler = new PlayerDataHandler(this);
 	}
 	
-	public AuthenticationFile getAuthFile() {
-		return authFile;
+	public AuthenticationFile getHashesFile() {
+		return hashesFile;
 	}
 	
-	public Map<UUID, List<String>> getAuthMap() {
-		return authMap;
+	public AuthenticationFile getSaltsFile() {
+		return saltsFile;
 	}
 	
 	public void addAuthentication(UUID uuid, String hash, String salt) {
-		List<String> saltAndHash = new ArrayList<String>();
-		saltAndHash.add(hash);
-		saltAndHash.add(salt);
-		authMap.put(uuid, saltAndHash);
-		authFile.saveTokens(authMap);
+		hashMap.put(uuid, hash);
+		hashesFile.saveTokens(hashMap);
+		saltMap.put(uuid, salt);
+		saltsFile.saveTokens(saltMap);
+		joinListener.updateMaps(hashMap, saltMap);
 	}
 	
 	public void removeAuthentication(UUID uuid) {
-		authMap.remove(uuid);
-		authFile.saveTokens(authMap);
+		hashMap.remove(uuid);
+		hashesFile.saveTokens(hashMap);
+		saltMap.remove(uuid);
+		saltsFile.saveTokens(saltMap);
+		joinListener.updateMaps(hashMap, saltMap);
 	}
 	
 	public AuthenticationHandler getAuthHandler() {

@@ -1,5 +1,6 @@
 package com.cubepalace.staffmanagement.listeners;
 
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
@@ -16,8 +17,10 @@ public class PlayerPreProcessListener implements Listener {
 
 	@EventHandler
 	public void onCommandPreProcess(PlayerCommandPreprocessEvent e) {
-		if (plugin.getDataHandler().getPlayerDataByPlayer(e.getPlayer()) == null)
+		Player player = e.getPlayer();
+		if (plugin.getDataHandler().getPlayerDataByPlayer(player) == null)
 			return;
+		
 		if (plugin.getDataHandler().getPlayerDataByPlayer(e.getPlayer()).hasAssignedAuthentication()) {
 			if (!e.getMessage().startsWith("/authenticate "))
 				e.setCancelled(true);
@@ -28,5 +31,6 @@ public class PlayerPreProcessListener implements Listener {
 				e.setCancelled(true);
 		}
 	}
+
 
 }

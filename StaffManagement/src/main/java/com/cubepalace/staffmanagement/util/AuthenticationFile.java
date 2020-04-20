@@ -2,9 +2,7 @@ package com.cubepalace.staffmanagement.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -46,26 +44,16 @@ public class AuthenticationFile {
 		config = YamlConfiguration.loadConfiguration(file);
 		save();
 	}
-
-	/*
-	 * TODO: Separate salts & hashesinto separate files
-	 */
 	
-	public Map<UUID, List<String>> loadTokens() {
-		Map<UUID, List<String>> tokens = new HashMap<UUID, List<String>>();
+	public Map<UUID, String> loadTokens() {
+		Map<UUID, String> tokens = new HashMap<>();
 
 		try {
 			for (String uuidStr : config.getConfigurationSection("authTokens").getKeys(false)) {
 				plugin.getLogger().info(uuidStr);
 				UUID uuid = UUID.fromString(uuidStr);
-				plugin.getLogger().info(config.getList("authTokens." + uuidStr).toString());
-
-				String hash = new String((String) config.getList("authTokens." + uuidStr).get(0));
-				String salt = new String((String) config.getList("authTokens." + uuidStr).get(1));
-				List<String> saltAndHash = new ArrayList<String>();
-				saltAndHash.add(hash);
-				saltAndHash.add(salt);
-				tokens.put(uuid, saltAndHash);
+				String token = config.getString("authTokens." + uuidStr);
+				tokens.put(uuid, token);
 			}
 		} catch (NullPointerException e) {
 			// This is in case "authTokens" hasn't been generated yet, we don't need to do anything
@@ -74,8 +62,8 @@ public class AuthenticationFile {
 		return tokens;
 	}
 
-	public void saveTokens(Map<UUID, List<String>> tokens) {
-		Map<String, List<String>> strTokens = new HashMap<String, List<String>>();
+	public void saveTokens(Map<UUID, String> tokens) {
+		Map<String, String> strTokens = new HashMap<>();
 
 		for (UUID uuid : tokens.keySet()) {
 			strTokens.put(uuid.toString(), tokens.get(uuid));

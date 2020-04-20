@@ -1,8 +1,5 @@
 package com.cubepalace.staffmanagement.commands;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.UUID;
 
@@ -14,6 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import com.cubepalace.staffmanagement.StaffManagement;
+import com.cubepalace.staffmanagement.util.StringHasher;
 
 public class StaffManagementCommand implements CommandExecutor {
 
@@ -84,11 +82,6 @@ public class StaffManagementCommand implements CommandExecutor {
 					plugin.getDataHandler().removePlayerDataByUUID(uuid);
 					sender.sendMessage(plugin.getMsgHandler().getMessage("authRemoved"));
 				} else if (args[1].equalsIgnoreCase("set")) {
-					if (!sender.hasPermission("staffmanagement.auth.set")) {
-						sender.sendMessage(plugin.getMsgHandler().getMessage("noPermission"));
-						return true;
-					}
-					
 					if (!(sender instanceof Player)) {
 						sender.sendMessage(plugin.getMsgHandler().getMessage("consoleSender"));
 						return true;
@@ -96,19 +89,20 @@ public class StaffManagementCommand implements CommandExecutor {
 					
 					Player player = (Player) sender;
 					
+					if (!player.hasPermission("staffmanagement.auth.set")) {
+						player.sendMessage(plugin.getMsgHandler().getMessage("noPermission"));
+						return true;
+					}
+					
 					if ((plugin.getDataHandler().getPlayerDataByPlayer(player) == null) || !plugin.getDataHandler().getPlayerDataByPlayer(player).hasPendingSet()) {
-						sender.sendMessage(plugin.getMsgHandler().getMessage("noPending"));
+						player.sendMessage(plugin.getMsgHandler().getMessage("noPending"));
 						return true;
 					}
 					
 					String password = args[2];
 					byte[] salt = generateSalt();
 					
-					plugin.getLogger().info(password);
-					plugin.getLogger().info(new String(salt));
-					plugin.getLogger().info(saltAndHash(password, salt));
-					
-					plugin.addAuthentication(player.getUniqueId(), saltAndHash(password, salt), new String(salt));
+					plugin.addAuthentication(player.getUniqueId(), new StringHasher(password, salt).saltAndHash(), new String(salt));
 					plugin.getDataHandler().getPlayerDataByPlayer(player).setPending(false);
 					player.sendMessage(plugin.getMsgHandler().getMessage("authSet"));
 				}
@@ -148,18 +142,5 @@ public class StaffManagementCommand implements CommandExecutor {
 		byte[] salt = new byte[16];
 		random.nextBytes(salt);
 		return salt;
-	}
-	
-	private String saltAndHash(String str, byte[] salt) {
-		try {
-			MessageDigest md = MessageDigest.getInstance("SHA-512");
-			md.update(salt);
-			byte[] hashPassword = md.digest(str.getBytes(StandardCharsets.UTF_8));
-			return new String(hashPassword);
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-		
-		return "";
 	}
 }

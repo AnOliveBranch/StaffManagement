@@ -9,9 +9,9 @@ public class Authentication {
 	private String hash;
 	private String salt;
 	
-	public Authentication(StaffManagement plugin, Player player) {
-		hash = plugin.getAuthMap().get(player.getUniqueId()).get(0);
-		salt = plugin.getAuthMap().get(player.getUniqueId()).get(1);
+	public Authentication(StaffManagement plugin, Player player, String hash, String salt) {
+		this.hash = hash;
+		this.salt = salt;
 	}
 	
 	public String getHash() {
